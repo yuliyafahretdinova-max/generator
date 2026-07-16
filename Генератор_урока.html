@@ -1,0 +1,380 @@
+<style>
+  :root{
+    --blue-deep:#0b3350; --blue-mid:#134369; --blue-line:#3a6f96;
+    --paper:#f6f3ea; --ink:#0b3350; --accent:#e8823c; --accent-2:#6fd0c7;
+    --danger:#c1543f; --good:#4c9a52;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  .app{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--blue-deep); color:var(--paper);
+    min-height:100vh; padding:28px 20px 60px;
+  }
+  .wrap{max-width:920px; margin:0 auto;}
+  h1{font-family:Georgia,serif; font-size:26px; margin:0 0 6px; font-weight:700;}
+  .sub{color:#9fc2dc; font-size:14px; margin:0 0 26px; line-height:1.5; max-width:640px;}
+
+  .step{
+    background:var(--blue-mid); border:1px solid var(--blue-line); border-radius:10px;
+    padding:20px 22px; margin-bottom:16px;
+  }
+  .step h2{
+    font-size:14px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--accent-2); margin:0 0 14px; font-weight:700;
+  }
+  label{display:block; font-size:13px; color:#bcd4e6; margin:14px 0 6px;}
+  label:first-child{margin-top:0;}
+  input[type="text"], textarea, input[type="number"]{
+    width:100%; background:var(--blue-deep); border:1px solid var(--blue-line);
+    color:var(--paper); border-radius:6px; padding:9px 11px; font-family:inherit;
+    font-size:14px; resize:vertical;
+  }
+  textarea{min-height:64px;}
+  input[type="file"]{color:#bcd4e6; font-size:13px;}
+  .row{display:flex; gap:14px; flex-wrap:wrap;}
+  .row > div{flex:1; min-width:120px;}
+
+  .btn{
+    background:var(--blue-deep); border:1px solid var(--blue-line); color:var(--paper);
+    padding:9px 16px; border-radius:6px; font-size:13.5px; cursor:pointer; font-family:inherit;
+  }
+  .btn:hover{background:#0d2a44;}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#231206; font-weight:700;}
+  .btn.primary:hover{background:#f2954f;}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  .checks{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;}
+  .chip{
+    display:flex; align-items:center; gap:7px; background:var(--blue-deep);
+    border:1px solid var(--blue-line); border-radius:20px; padding:7px 13px 7px 10px;
+    font-size:13px; cursor:pointer; user-select:none;
+  }
+  .chip input{margin:0;}
+  .chip.checked{border-color:var(--accent-2); color:var(--accent-2);}
+
+  .cpa-badge{
+    display:flex; align-items:center; gap:10px; background:rgba(76,154,82,0.15);
+    border:1px solid var(--good); border-radius:8px; padding:10px 14px; margin-top:16px;
+    font-size:13px; color:#bfe8c4;
+  }
+  .cpa-badge svg{width:18px; height:18px; stroke:var(--good); fill:none; flex-shrink:0;}
+
+  .preview{
+    max-height:160px; overflow-y:auto; background:var(--blue-deep); border:1px solid var(--blue-line);
+    border-radius:6px; padding:10px 12px; font-size:12px; color:#9fc2dc; margin-top:8px;
+    white-space:pre-wrap; font-family:'Courier New',monospace; display:none;
+  }
+  .preview.show{display:block;}
+
+  .status{font-size:13px; color:#9fc2dc; margin-top:10px; display:flex; align-items:center; gap:8px;}
+  .spinner{
+    width:14px; height:14px; border:2px solid var(--blue-line); border-top-color:var(--accent-2);
+    border-radius:50%; animation:spin .8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .error{color:#ffb3a3;}
+
+  .output{margin-top:20px;}
+  .output-toolbar{display:flex; gap:10px; margin-bottom:14px;}
+  .card{
+    background:var(--paper); color:var(--ink); border-radius:8px; padding:16px 18px;
+    margin-bottom:12px; position:relative; font-size:14px; line-height:1.55;
+  }
+  .card .del{
+    position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:50%;
+    background:transparent; border:1px solid #cfc6b0; color:#8a7c5c; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:14px;
+  }
+  .card .del:hover{background:rgba(193,84,63,0.12); border-color:var(--danger); color:var(--danger);}
+  .card h3{margin:0 12px 8px 0; font-size:15px; font-family:Georgia,serif;}
+  .card :is(p,ul,ol,table){margin:0 0 8px;}
+  .card table{border-collapse:collapse; width:100%; font-size:13px;}
+  .card th, .card td{border:1px solid #d9d2bd; padding:5px 8px; text-align:left;}
+  .card em{color:#7a6a45;}
+  .card code{background:#eee4cd; padding:1px 5px; border-radius:3px;}
+</style>
+
+<div class="app">
+  <div class="wrap">
+    <h1>Генератор урока</h1>
+    <p class="sub">Загрузите учебник, укажите тему и параметры — программа соберёт план урока по карточкам через модель Concrete → Pictorial → Abstract, в формате, который мы используем для курса.</p>
+
+    <div class="step">
+      <h2>1. Учебник</h2>
+      <label>Файл PDF</label>
+      <input type="file" id="pdfInput" accept="application/pdf">
+      <div class="row">
+        <div>
+          <label>Страница с</label>
+          <input type="number" id="pageFrom" placeholder="17" min="1">
+        </div>
+        <div>
+          <label>Страница по</label>
+          <input type="number" id="pageTo" placeholder="29" min="1">
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn" id="extractBtn" disabled>Извлечь текст страниц</button>
+        <span class="status" id="extractStatus"></span>
+      </div>
+      <div class="preview" id="textPreview"></div>
+    </div>
+
+    <div class="step">
+      <h2>2. Параметры урока</h2>
+      <label>Тема урока</label>
+      <input type="text" id="topic" placeholder="Например: Угол, перпендикуляр, параллельные прямые">
+      <label>Lesson Objectives</label>
+      <textarea id="objectives" placeholder="К концу урока ученик сможет..."></textarea>
+      <label>Learning Outcomes (код программы + формулировка)</label>
+      <textarea id="outcomes" placeholder="MAT.5.3.2. ..."></textarea>
+    </div>
+
+    <div class="step">
+      <h2>3. Типы заданий</h2>
+      <label style="margin-top:0;">Какие механики может использовать программа</label>
+      <div class="checks" id="taskTypes">
+        <label class="chip checked"><input type="checkbox" value="Да/нет" checked> Да/нет</label>
+        <label class="chip checked"><input type="checkbox" value="Single choice" checked> Single choice</label>
+        <label class="chip checked"><input type="checkbox" value="Multiple choice" checked> Multiple choice</label>
+        <label class="chip checked"><input type="checkbox" value="Ввод текста" checked> Ввод текста</label>
+        <label class="chip"><input type="checkbox" value="Matching"> Matching (соедини пары)</label>
+        <label class="chip checked"><input type="checkbox" value="Wordwall" checked> Wordwall</label>
+        <label class="chip checked"><input type="checkbox" value="Interactive (свои HTML-инструменты)" checked> Interactive</label>
+      </div>
+
+      <div class="cpa-badge">
+        <svg viewBox="0 0 24 24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Модель Concrete → Pictorial → Abstract обязательна для каждого понятия — это не отключается.
+      </div>
+    </div>
+
+    <div class="step">
+      <button class="btn primary" id="generateBtn">Сгенерировать урок</button>
+      <span class="status" id="genStatus"></span>
+    </div>
+
+    <div class="output" id="output" style="display:none;">
+      <div class="output-toolbar">
+        <button class="btn" id="copyBtn">Скопировать всё</button>
+        <button class="btn" id="downloadBtn">Скачать .md</button>
+      </div>
+      <div id="cardsContainer"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function(){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const pdfInput = document.getElementById('pdfInput');
+  const pageFrom = document.getElementById('pageFrom');
+  const pageTo = document.getElementById('pageTo');
+  const extractBtn = document.getElementById('extractBtn');
+  const extractStatus = document.getElementById('extractStatus');
+  const textPreview = document.getElementById('textPreview');
+  const generateBtn = document.getElementById('generateBtn');
+  const genStatus = document.getElementById('genStatus');
+  const output = document.getElementById('output');
+  const cardsContainer = document.getElementById('cardsContainer');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  let pdfDoc = null;
+  let extractedText = '';
+
+  pdfInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    extractStatus.textContent = 'Загрузка файла...';
+    const buf = await file.arrayBuffer();
+    pdfDoc = await pdfjsLib.getDocument({data: buf}).promise;
+    extractStatus.textContent = `Готово: ${pdfDoc.numPages} страниц.`;
+    extractBtn.disabled = false;
+    if(!pageFrom.value) pageFrom.value = 1;
+    if(!pageTo.value) pageTo.value = pdfDoc.numPages;
+  });
+
+  extractBtn.addEventListener('click', async () => {
+    if(!pdfDoc) return;
+    const from = Math.max(1, parseInt(pageFrom.value) || 1);
+    const to = Math.min(pdfDoc.numPages, parseInt(pageTo.value) || pdfDoc.numPages);
+    extractStatus.innerHTML = '<span class="spinner"></span> Извлекаю текст...';
+    extractBtn.disabled = true;
+    let text = '';
+    for(let p = from; p <= to; p++){
+      const page = await pdfDoc.getPage(p);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(it => it.str).join(' ');
+      text += `\n\n--- Страница ${p} ---\n${pageText}`;
+    }
+    extractedText = text.trim();
+    extractStatus.textContent = `Извлечено ${extractedText.length} символов (стр. ${from}–${to}).`;
+    textPreview.textContent = extractedText.slice(0, 3000) + (extractedText.length > 3000 ? '\n\n... (обрезано для предпросмотра, в генерацию уйдёт весь текст)' : '');
+    textPreview.classList.add('show');
+    extractBtn.disabled = false;
+  });
+
+  function getCheckedTaskTypes(){
+    return Array.from(document.querySelectorAll('#taskTypes input:checked')).map(i => i.value);
+  }
+  document.querySelectorAll('#taskTypes .chip').forEach(chip => {
+    const input = chip.querySelector('input');
+    input.addEventListener('change', () => chip.classList.toggle('checked', input.checked));
+  });
+
+  function buildSystemPrompt(){
+    return `Ты — методист, который составляет технические задания на уроки математики для детей 9-11 лет (курс Math for School, Level 5, Турция, программа Maarif) в строго определённом карточном формате.
+
+ФОРМАТ ВЫВОДА (строго обязателен):
+- Курсивом (в Markdown *текст*) пишутся инструкции для дизайнера/автора — что нарисовать, какую гифку сделать, что скрыто под спойлером. Это НЕ идёт на слайд.
+- Обычным текстом пишется контент, который переносится на слайд дословно (реплики персонажей, определения, вопросы, варианты ответов).
+- Каждая смысловая единица — заголовок "## Карточка N" (сквозная нумерация).
+- Если карточка использует особую механику — заголовок "## Карточка N тип [Universal/Wordwall/Interactive]".
+- Реплики сюжетных персонажей Rafi и Sofi помечаются "📣 *Rafi:*" или "📣 *Sofi:*".
+- Важные определения оформляются как "*Иконка шапки-академки и подпись:*" + сама формулировка.
+- Таблица обозначений всегда в формате: | Геометрический рисунок | Символьное обозначение | Чтение |
+
+МОДЕЛЬ CONCRETE → PICTORIAL → ABSTRACT — ОБЯЗАТЕЛЬНА для каждого нового понятия:
+1. CONCRETE: бытовая/сюжетная ситуация с реальным действием (гифка/анимация), без слова "определение"
+2. PICTORIAL: мини-задание на пробу (да/нет, выбор картинки, ввод текста) — ученик формулирует признак понятия своими словами ДО получения готового правила
+3. ABSTRACT: формальный вывод (иконка академки) + таблица обозначений
+Затем — практика (Universal/Wordwall/Interactive).
+
+СТРУКТУРА УРОКА:
+1. Recap (5 мин, Wordwall-квиз по материалу прошлого урока) — если это не первый урок курса
+2. Завязка сюжета (бюро молодых архитекторов, персонажи Rafi и Sofi, парк как сквозной артефакт)
+3. Цикл CPA для каждого понятия по порядку из материала учебника
+4. Мини-проверка после группы понятий (Universal)
+5. Творческая мастерская — применение понятий вместе (Interactive)
+6. Перерыв с таймером (примерно в середине урока)
+7. Самостоятельная работа / обсуждение / доп. логика (опционально)
+8. Саммари (2-3 вопроса на перенос знаний, не на пересказ) → рефлексия → домашнее задание → анонс следующего урока
+
+Используй ТОЛЬКО те типы механик, которые перечислены пользователем в разрешённом списке. Если для практики нужен новый интерактивный HTML-инструмент, которого ещё нет — опиши словами, что он должен делать, и пометь "[нужен новый инструмент]".
+
+Пиши на русском языке. Не добавляй ничего, кроме самого ТЗ по карточкам (не пиши преамбулу и не резюмируй в конце).`;
+  }
+
+  function buildUserPrompt(){
+    const topic = document.getElementById('topic').value.trim();
+    const objectives = document.getElementById('objectives').value.trim();
+    const outcomes = document.getElementById('outcomes').value.trim();
+    const taskTypes = getCheckedTaskTypes().join(', ');
+
+    return `Тема урока: ${topic}
+
+Lesson Objectives:
+${objectives}
+
+Learning Outcomes:
+${outcomes}
+
+Разрешённые типы заданий: ${taskTypes}
+
+Материал учебника (используй как основу для содержания и порядка подачи понятий):
+${extractedText || '(текст учебника не загружен — составь план на основе темы и целей выше)'}`;
+  }
+
+  function splitIntoCards(markdown){
+    const parts = markdown.split(/(?=^##\s)/m).map(s => s.trim()).filter(Boolean);
+    return parts.length ? parts : [markdown];
+  }
+
+  function mdToHtml(md){
+    let html = md
+      .replace(/^## (.*)$/gm, '<h3>$1</h3>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>');
+
+    // simple table conversion
+    html = html.replace(/((?:\|.*\|\n?)+)/g, (block) => {
+      const rows = block.trim().split('\n').filter(r => r.trim().startsWith('|'));
+      if(rows.length < 2) return block;
+      const cells = rows.map(r => r.split('|').slice(1,-1).map(c => c.trim()));
+      const isSep = cells[1] && cells[1].every(c => /^-+$/.test(c));
+      let out = '<table>';
+      cells.forEach((row, i) => {
+        if(i === 1 && isSep) return;
+        const tag = i === 0 ? 'th' : 'td';
+        out += '<tr>' + row.map(c => `<${tag}>${c}</${tag}>`).join('') + '</tr>';
+      });
+      out += '</table>';
+      return out;
+    });
+
+    html = html.split(/\n\n+/).map(p => {
+      if(/^<h3>|^<table>/.test(p.trim())) return p;
+      return `<p>${p.replace(/\n/g,'<br>')}</p>`;
+    }).join('');
+
+    return html;
+  }
+
+  function renderCards(markdown){
+    const cards = splitIntoCards(markdown);
+    cardsContainer.innerHTML = '';
+    cards.forEach((cardMd) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.dataset.md = cardMd;
+      div.innerHTML = mdToHtml(cardMd) + '<button class="del" title="Убрать карточку">✕</button>';
+      div.querySelector('.del').addEventListener('click', () => div.remove());
+      cardsContainer.appendChild(div);
+    });
+    output.style.display = 'block';
+  }
+
+  generateBtn.addEventListener('click', async () => {
+    genStatus.innerHTML = '<span class="spinner"></span> Генерирую урок...';
+    genStatus.classList.remove('error');
+    generateBtn.disabled = true;
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: buildSystemPrompt(),
+          messages: [{ role: 'user', content: buildUserPrompt() }]
+        })
+      });
+      const data = await response.json();
+      const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+      if(!text){
+        throw new Error('Пустой ответ от модели');
+      }
+      renderCards(text);
+      genStatus.textContent = 'Готово.';
+    } catch(err) {
+      genStatus.textContent = 'Ошибка генерации: ' + err.message;
+      genStatus.classList.add('error');
+    } finally {
+      generateBtn.disabled = false;
+    }
+  });
+
+  function currentFullMarkdown(){
+    return Array.from(cardsContainer.querySelectorAll('.card')).map(c => c.dataset.md).join('\n\n---\n\n');
+  }
+
+  copyBtn.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(currentFullMarkdown());
+    copyBtn.textContent = 'Скопировано';
+    setTimeout(() => copyBtn.textContent = 'Скопировать всё', 1400);
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const blob = new Blob([currentFullMarkdown()], {type: 'text/markdown'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'urok.md';
+    link.click();
+  });
+})();
+</script>
